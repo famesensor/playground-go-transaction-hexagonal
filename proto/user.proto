@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "github.com/famesensor/playground-go-transaction-hexagonal/proto";
+
+package proto;
+
+// The greeting service definition.
+service User {
+  // Sends a greeting
+  rpc CreateUserHandler (CreateUserReq) returns (CreateUserRes) {}
+}
+
+// The request message containing the user's name.
+message CreateUserReq {
+  string name = 1;
+  string address = 2;
+}
+
+// The response message containing the greetings
+message CreateUserRes {
+  Timestamp data = 1;
+}
+
+message Timestamp {
+  string timestamp = 1;
+}
