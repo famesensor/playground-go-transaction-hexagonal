@@ -3,6 +3,8 @@ module github.com/famesensor/playground-go-transaction-hexagonal
 go 1.22.5
 
 require (
+	github.com/avito-tech/go-transaction-manager/drivers/gorm/v2 v2.0.0
+	github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.0-rc9.2
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gorm.io/driver/postgres v1.5.9
@@ -16,6 +18,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect

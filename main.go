@@ -5,6 +5,10 @@ import (
 	"log"
 	"net"
 
+	trmgorm "github.com/avito-tech/go-transaction-manager/drivers/gorm/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/settings"
 	"github.com/famesensor/playground-go-transaction-hexagonal/database"
 	"github.com/famesensor/playground-go-transaction-hexagonal/handler"
 	"github.com/famesensor/playground-go-transaction-hexagonal/proto"
@@ -20,10 +24,18 @@ func main() {
 		panic(err)
 	}
 
-	userRepo := repository.NewUser(db)
-	addressRepo := repository.NewAddress(db)
+	userRepo := repository.NewUser(db, trmgorm.DefaultCtxGetter)
+	addressRepo := repository.NewAddress(db, trmgorm.DefaultCtxGetter)
 
-	createUserSvc := service.NewCreateUserService(userRepo, addressRepo)
+	trManager := manager.Must(
+		trmgorm.NewDefaultFactory(db),
+		manager.WithSettings(trmgorm.MustSettings(
+			settings.Must(
+				settings.WithPropagation(trm.PropagationNested))),
+		),
+	)
+
+	createUserSvc := service.NewCreateUserService(userRepo, addressRepo, trManager)
 
 	port := 9000
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/famesensor/playground-go-transaction-hexagonal/model"
 	"github.com/famesensor/playground-go-transaction-hexagonal/repository"
 )
@@ -14,29 +15,28 @@ type CreateUserService interface {
 type createUserService struct {
 	userRepo    repository.UserRepository
 	addressRepo repository.AddressRepository
+	txManager   *manager.Manager
 }
 
-func NewCreateUserService(userRepo repository.UserRepository, addressRepo repository.AddressRepository) CreateUserService {
+func NewCreateUserService(userRepo repository.UserRepository, addressRepo repository.AddressRepository, txManager *manager.Manager) CreateUserService {
 	return &createUserService{
 		userRepo,
 		addressRepo,
+		txManager,
 	}
 }
 
 func (s *createUserService) Create(ctx context.Context, req *model.CreateUserReq) error {
+	return s.txManager.Do(ctx, func(c context.Context) error {
+		if err := s.userRepo.Create(c, &model.CreateUser{Name: req.Name}); err != nil {
+			return err
+		}
 
-	tx := s.userRepo.Begin()
+		// UserID set 1 for test error and rollback
+		if err := s.addressRepo.Create(c, &model.CreateAddress{UserID: 0, Address: req.Address}); err != nil {
+			return err
+		}
 
-	if err := s.userRepo.WithTrx(tx).Create(ctx, &model.CreateUser{Name: req.Name}); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// UserID set 1 for test error and rollback
-	if err := s.addressRepo.WithTrx(tx).Create(ctx, &model.CreateAddress{UserID: 0, Address: req.Address}); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+		return nil
+	})
 }

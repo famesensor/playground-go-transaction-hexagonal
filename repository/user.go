@@ -3,37 +3,25 @@ package repository
 import (
 	"context"
 
+	trmgorm "github.com/avito-tech/go-transaction-manager/drivers/gorm/v2"
 	"github.com/famesensor/playground-go-transaction-hexagonal/entity"
 	"github.com/famesensor/playground-go-transaction-hexagonal/model"
 	"gorm.io/gorm"
 )
 
 type UserRepository interface {
-	Transactor
-	WithTrx(tx *gorm.DB) UserRepository
 	Create(ctx context.Context, req *model.CreateUser) error
 }
 
 type userRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	getter *trmgorm.CtxGetter
 }
 
-func NewUser(db *gorm.DB) UserRepository {
-	return &userRepository{db}
-}
-
-func (u userRepository) Begin() *gorm.DB {
-	return u.db.Begin()
-}
-
-func (u userRepository) WithTrx(tx *gorm.DB) UserRepository {
-	if tx != nil {
-		u.db = tx
-	}
-
-	return u
+func NewUser(db *gorm.DB, getter *trmgorm.CtxGetter) UserRepository {
+	return &userRepository{db, getter}
 }
 
 func (u userRepository) Create(ctx context.Context, req *model.CreateUser) error {
-	return u.db.WithContext(ctx).Create(&entity.User{Name: req.Name}).Error
+	return u.getter.DefaultTrOrDB(ctx, u.db).WithContext(ctx).Create(&entity.User{Name: req.Name}).Error
 }
