@@ -1,7 +1,8 @@
 package model
 
 type CreateUser struct {
-	Name string
+	Name    string
+	Address string
 }
 
 type CreateUserReq struct {

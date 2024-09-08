@@ -9,9 +9,7 @@ import (
 )
 
 type UserRepository interface {
-	Transactor
-	WithTrx(tx *gorm.DB) UserRepository
-	Create(ctx context.Context, req *model.CreateUser) error
+	CreateUserAndAddress(ctx context.Context, req *model.CreateUser) error
 }
 
 type userRepository struct {
@@ -22,18 +20,27 @@ func NewUser(db *gorm.DB) UserRepository {
 	return &userRepository{db}
 }
 
-func (u userRepository) Begin() *gorm.DB {
-	return u.db.Begin()
-}
+func (u *userRepository) CreateUserAndAddress(ctx context.Context, req *model.CreateUser) error {
+	tx := u.db.WithContext(ctx).Begin()
 
-func (u userRepository) WithTrx(tx *gorm.DB) UserRepository {
-	if tx != nil {
-		u.db = tx
+	var done bool
+
+	defer func() {
+		if !done {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Create(&entity.User{Name: req.Name}).Error; err != nil {
+		// tx.Rollback()
+		return err
 	}
 
-	return u
-}
+	if err := tx.Create(&entity.Address{UserID: 0, Address: &req.Address}).Error; err != nil {
+		// tx.Rollback()
+		return err
+	}
 
-func (u userRepository) Create(ctx context.Context, req *model.CreateUser) error {
-	return u.db.WithContext(ctx).Create(&entity.User{Name: req.Name}).Error
+	done = true
+	return tx.Commit().Error
 }

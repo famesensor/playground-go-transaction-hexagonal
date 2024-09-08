@@ -12,31 +12,15 @@ type CreateUserService interface {
 }
 
 type createUserService struct {
-	userRepo    repository.UserRepository
-	addressRepo repository.AddressRepository
+	userRepo repository.UserRepository
 }
 
-func NewCreateUserService(userRepo repository.UserRepository, addressRepo repository.AddressRepository) CreateUserService {
+func NewCreateUserService(userRepo repository.UserRepository) CreateUserService {
 	return &createUserService{
 		userRepo,
-		addressRepo,
 	}
 }
 
 func (s *createUserService) Create(ctx context.Context, req *model.CreateUserReq) error {
-
-	tx := s.userRepo.Begin()
-
-	if err := s.userRepo.WithTrx(tx).Create(ctx, &model.CreateUser{Name: req.Name}); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// UserID set 1 for test error and rollback
-	if err := s.addressRepo.WithTrx(tx).Create(ctx, &model.CreateAddress{UserID: 0, Address: req.Address}); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+	return s.userRepo.CreateUserAndAddress(ctx, &model.CreateUser{Name: req.Name, Address: req.Address})
 }

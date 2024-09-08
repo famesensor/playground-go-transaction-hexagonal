@@ -21,9 +21,8 @@ func main() {
 	}
 
 	userRepo := repository.NewUser(db)
-	addressRepo := repository.NewAddress(db)
 
-	createUserSvc := service.NewCreateUserService(userRepo, addressRepo)
+	createUserSvc := service.NewCreateUserService(userRepo)
 
 	port := 9000
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
