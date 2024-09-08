@@ -2,9 +2,10 @@
 
 ### Branch
 
-- main : Transaction with receiver function
-- one_function : Transaction with one function
-- uow : Transaction with Unit of Work repository
+- main : Transaction by receiver function
+- one_function : Transaction by one function
+- uow : Transaction by Unit of Work repository
+- go_transaction_manager : Transaction by third party library
 
 ### Reference
 
