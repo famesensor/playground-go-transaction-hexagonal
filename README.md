@@ -1,1 +1,1 @@
-# playground-go-transaction-heaxagonal
+# playground-go-transaction-hexagonal
