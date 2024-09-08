@@ -12,31 +12,27 @@ type CreateUserService interface {
 }
 
 type createUserService struct {
+	uowRepo     repository.UnitOfWork
 	userRepo    repository.UserRepository
 	addressRepo repository.AddressRepository
 }
 
-func NewCreateUserService(userRepo repository.UserRepository, addressRepo repository.AddressRepository) CreateUserService {
+func NewCreateUserService(uowRepo repository.UnitOfWork, userRepo repository.UserRepository, addressRepo repository.AddressRepository) CreateUserService {
 	return &createUserService{
+		uowRepo,
 		userRepo,
 		addressRepo,
 	}
 }
 
 func (s *createUserService) Create(ctx context.Context, req *model.CreateUserReq) error {
-
-	tx := s.userRepo.Begin()
-
-	if err := s.userRepo.WithTrx(tx).Create(ctx, &model.CreateUser{Name: req.Name}); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// UserID set 1 for test error and rollback
-	if err := s.addressRepo.WithTrx(tx).Create(ctx, &model.CreateAddress{UserID: 0, Address: req.Address}); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+	return s.uowRepo.BeginTx(ctx, func(tx repository.UnitOfWork) error {
+		if err := tx.UserRepository().Create(ctx, &model.CreateUser{Name: req.Name}); err != nil {
+			return err
+		}
+		if err := tx.AddressRepository().Create(ctx, &model.CreateAddress{UserID: 0, Address: req.Address}); err != nil {
+			return err
+		}
+		return nil
+	})
 }

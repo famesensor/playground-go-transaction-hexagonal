@@ -20,10 +20,11 @@ func main() {
 		panic(err)
 	}
 
+	uowRepo := repository.NewUnitOfWork(db)
 	userRepo := repository.NewUser(db)
 	addressRepo := repository.NewAddress(db)
 
-	createUserSvc := service.NewCreateUserService(userRepo, addressRepo)
+	createUserSvc := service.NewCreateUserService(uowRepo, userRepo, addressRepo)
 
 	port := 9000
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
